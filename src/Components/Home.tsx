@@ -7,7 +7,7 @@ export default function Home() {
       <nav className="flex justify-between items-center px-10 py-5 bg-white shadow">
         <h1 className="text-2xl font-bold text-blue-700">EL-FATOORA</h1>
         <Link
-          to="/subscribe"
+          to="/Products"
           className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
         >
           Subscribe
