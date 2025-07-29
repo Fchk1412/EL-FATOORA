@@ -1,10 +1,23 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./Components/Home";
+import Subscription from "./Components/Subscription";
+import "./index.css"; // Assuming you have a global CSS file for styles
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/subscribe" element={<Subscription />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+  <React.StrictMode>
     <App />
-  </StrictMode>,
-)
+  </React.StrictMode>
+);
