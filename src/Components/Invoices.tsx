@@ -10,19 +10,17 @@ interface LineItem {
 }
 
 export default function Invoices() {
-  // TEIF-required fields
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10)); // YYYY-MM-DD
-  const [sellerTVA, setSellerTVA] = useState("");   // MessageSenderIdentifier
+  const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
+  const [sellerTVA, setSellerTVA] = useState("");
   const [customerName, setCustomerName] = useState("");
-  const [customerTVA, setCustomerTVA] = useState(""); // MessageRecieverIdentifier
+  const [customerTVA, setCustomerTVA] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
-  const [paymentTermCode, setPaymentTermCode] = useState("30D"); // e.g. 30 days
+  const [paymentTermCode, setPaymentTermCode] = useState("30D");
   const [paymentTermDesc, setPaymentTermDesc] = useState("Net 30");
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [nextId, setNextId] = useState(1);
 
-  // Helpers
   function addLineItem() {
     setLineItems((prev) => [
       ...prev,
@@ -67,27 +65,18 @@ export default function Invoices() {
   );
   const grandTotal = subtotal + totalTax;
 
-  function handleSubmit() {
+  function handleGeneratePDF() {
     if (!sellerTVA || !invoiceNumber || lineItems.length === 0) {
       return alert("Please fill in seller TVA, invoice number, and at least one line item.");
     }
 
     const payload = {
-      header: {
-        version: "1.8.7",
-        controlingAgency: "TTN",
-        invoiceNumber,
-        documentTypeCode: "380",
-        issueDate,
-        sellerTVA,
-        customerTVA,
-      },
-      partner: {
-        seller: { tva: sellerTVA },
-        buyer: { name: customerName, tva: customerTVA, address: customerAddress },
-      },
+      invoiceNumber,
+      issueDate,
+      seller: { tva: sellerTVA },
+      client: { name: customerName, tva: customerTVA, address: customerAddress },
       payment: { code: paymentTermCode, description: paymentTermDesc },
-      lines: lineItems,
+      lineItems,
       totals: {
         subtotal: subtotal.toFixed(2),
         totalTax: totalTax.toFixed(2),
@@ -95,32 +84,30 @@ export default function Invoices() {
       },
     };
 
-    // Send to backend to build XML
-    fetch("/api/invoices", {
+    fetch("http://localhost:5000/api/generate-invoice", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-      .then((r) => r.blob())
-      .then((xmlBlob) => {
-        // trigger download of TEIF XML
-        const url = URL.createObjectURL(xmlBlob);
+      .then((res) => res.blob())
+      .then((pdfBlob) => {
+        const url = URL.createObjectURL(pdfBlob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${invoiceNumber}.xml`;
+        a.download = `${invoiceNumber}.pdf`;
         a.click();
       })
-      .catch((e) => alert("Error generating invoice XML: " + e.message));
+      .catch((e) => alert("Error generating PDF invoice: " + e.message));
   }
 
   return (
     <div className="min-h-screen bg-gray-100 p-10">
       <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">
-        Create TEIF‑Compliant Invoice
+        Create Invoice
       </h2>
 
       <div className="bg-white p-6 rounded-xl shadow-md max-w-4xl mx-auto space-y-6">
-        {/* TEIF Header */}
+        {/* Header */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
             type="text"
@@ -144,25 +131,25 @@ export default function Invoices() {
           />
         </div>
 
-        {/* Partner Section */}
+        {/* Client Info */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
             type="text"
-            placeholder="Customer Name"
+            placeholder="Client Name"
             value={customerName}
             onChange={(e) => setCustomerName(e.target.value)}
             className="border p-2 rounded focus:ring-2 focus:ring-blue-500 w-full"
           />
           <input
             type="text"
-            placeholder="Customer TVA"
+            placeholder="Client TVA"
             value={customerTVA}
             onChange={(e) => setCustomerTVA(e.target.value)}
             className="border p-2 rounded focus:ring-2 focus:ring-blue-500 w-full"
           />
           <input
             type="text"
-            placeholder="Customer Address"
+            placeholder="Client Address"
             value={customerAddress}
             onChange={(e) => setCustomerAddress(e.target.value)}
             className="border p-2 rounded focus:ring-2 focus:ring-blue-500 w-full"
@@ -190,42 +177,31 @@ export default function Invoices() {
         {/* Line Items */}
         <div className="space-y-2">
           {lineItems.map((item) => (
-            <div
-              key={item.id}
-              className="grid grid-cols-1 md:grid-cols-5 gap-2 items-center"
-            >
+            <div key={item.id} className="grid grid-cols-1 md:grid-cols-5 gap-2 items-center">
               <input
                 type="text"
                 placeholder="Product"
                 value={item.productName}
-                onChange={(e) =>
-                  handleLineChange(item.id, "productName", e.target.value)
-                }
+                onChange={(e) => handleLineChange(item.id, "productName", e.target.value)}
                 className="border p-2 rounded"
               />
               <input
                 type="number"
                 min="1"
                 value={item.quantity}
-                onChange={(e) =>
-                  handleLineChange(item.id, "quantity", e.target.value)
-                }
+                onChange={(e) => handleLineChange(item.id, "quantity", e.target.value)}
                 className="border p-2 rounded"
               />
               <input
                 type="number"
                 min="0"
                 value={item.unitPrice}
-                onChange={(e) =>
-                  handleLineChange(item.id, "unitPrice", e.target.value)
-                }
+                onChange={(e) => handleLineChange(item.id, "unitPrice", e.target.value)}
                 className="border p-2 rounded"
               />
               <select
                 value={item.tax}
-                onChange={(e) =>
-                  handleLineChange(item.id, "tax", e.target.value)
-                }
+                onChange={(e) => handleLineChange(item.id, "tax", e.target.value)}
                 className="border p-2 rounded"
               >
                 <option value={0}>0%</option>
@@ -252,7 +228,7 @@ export default function Invoices() {
           </button>
         </div>
 
-        {/* Totals & Submit */}
+        {/* Totals & Generate */}
         <div className="bg-blue-50 p-4 rounded space-y-1">
           <p>Subtotal: {subtotal.toFixed(2)} DT</p>
           <p>Total Tax: {totalTax.toFixed(2)} DT</p>
@@ -260,7 +236,7 @@ export default function Invoices() {
         </div>
 
         <button
-          onClick={handleSubmit}
+          onClick={handleGeneratePDF}
           disabled={lineItems.length === 0}
           className={`w-full px-6 py-3 rounded-lg text-lg font-semibold transition ${
             lineItems.length === 0
@@ -268,7 +244,7 @@ export default function Invoices() {
               : "bg-blue-600 hover:bg-blue-700"
           } text-white`}
         >
-          Generate TEIF XML
+          Download Invoice PDF
         </button>
       </div>
     </div>

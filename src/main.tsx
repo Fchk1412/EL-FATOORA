@@ -3,10 +3,11 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./Components/Home";
 import Subscription from "./Components/Subscription";
-import "./index.css"; // Assuming you have a global CSS file for styles
+import "./index.css";
 import Products from "./Components/Products";
-import Clients from "./Components/Clients"; // Assuming this is the correct path for the Employees component
-import Invoices from "./Components/Invoices"; // Assuming you have an Invoices component
+import Clients from "./Components/Clients";
+import Invoices from "./Components/Invoices";
+
 function App() {
   return (
     <BrowserRouter>
