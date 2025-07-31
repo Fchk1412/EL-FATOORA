@@ -7,6 +7,9 @@ import "./index.css";
 import Products from "./Components/Products";
 import Clients from "./Components/Clients";
 import Invoices from "./Components/Invoices";
+import Login from "./Components/login";
+import Dashboard from "./Components/dashboard";
+
 
 function App() {
   return (
@@ -18,7 +21,12 @@ function App() {
         <Route path="/Clients" element={<Clients />} />
         
         <Route path="/Invoices" element={<Invoices />} />
+        <Route path="/Login" element={<Login />} />
+        <Route path="/Dashboard" element={<Dashboard />} />
         {/* Add more routes as needed */}
+        <Route path="/dashboard/Products" element={<Products />} />
+        <Route path="/dashboard/Clients" element={<Clients />} />
+        <Route path="/dashboard/Invoices" element={<Invoices />} />
       </Routes>
     </BrowserRouter>
   );

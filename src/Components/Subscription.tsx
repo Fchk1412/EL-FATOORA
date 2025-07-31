@@ -1,144 +1,163 @@
 import { useState } from "react";
 
 export default function Subscription() {
-  const [form, setForm] = useState({
-    codeTva: "",
-    category: "",
-    tvaType: "",
-    name: "",
-    phone: "",
-    additionalContact: "",
-  });
+  const [companyName, setCompanyName] = useState("");
+  const [matriculeFiscal, setMatriculeFiscal] = useState("");
+  const [modeConnexion, setModeConnexion] = useState("SMTP");
+  const [rangCompte, setRangCompte] = useState("NP");
+  const [profil, setProfil] = useState("Banques");
+  const [email, setEmail] = useState("");
+  const [errorFiscal, setErrorFiscal] = useState("");
 
-  const [tvaError, setTvaError] = useState(false);
+  const handleFiscalChange = (value: string) => {
+    setMatriculeFiscal(value);
 
-  const categories = [
-    "Energy company",
-    "Film production company",
-    "Manufacturing company",
-    "Mass media company",
-    "Pharmaceutical company",
-    "Publishing company",
-    "Retail company",
-    "Service company",
-    "Technology company",
-    "Transport company",
-  ];
-
-  const tvaTypes = [
-    "Taux standard 19%",
-    "Taux intermédiaire 13%",
-    "Taux réduit 7%",
-    "Exonération / détaxé 0%",
-  ];
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-
-    if (name === "codeTva") {
-      const regex = /^\d{7}\/[A-Za-z0-9]\/[A-Za-z0-9]\/[A-Za-z0-9]\/\d{3}$/;
-      setTvaError(!regex.test(value));
+    // Regex for TVA format: 7 digits  3 uppercase letters  3 digits
+    const fiscalRegex = /^\d{7}[A-Z]{3}\d{3}$/;
+    if (!fiscalRegex.test(value)) {
+      setErrorFiscal(
+        "❌ Invalid format. Expected: 0000000XXX000 (7 digits  3 letters  3 digits)"
+      );
+    } else {
+      setErrorFiscal("");
     }
-  }
+  };
 
-  function handleSubscribe() {
-    if (tvaError || !form.codeTva) {
-      alert("Please provide a valid TVA Code before submitting.");
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (errorFiscal) {
+      alert("Please fix the fiscal ID format before submitting.");
       return;
     }
-    alert("Submitted company data for verification:\n" + JSON.stringify(form, null, 2));
-    // TODO: Send this data to backend for verification
-  }
+
+    const payload = {
+      companyName,
+      matriculeFiscal,
+      modeConnexion,
+      rangCompte,
+      profil,
+      email,
+    };
+
+    fetch("http://localhost:5000/api/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => res.json())
+      .then(() =>
+        alert(
+          "✅ Subscription data saved successfully. A unique Client Code, username, and password will be generated and sent to your email."
+        )
+      )
+      .catch((e) => alert("❌ Failed to save: " + e.message));
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
-      <div className="bg-white rounded-xl shadow-lg p-10 w-full max-w-lg">
-        <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">Company Verification</h2>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white shadow-lg rounded-xl p-8 w-full max-w-2xl space-y-6"
+      >
+        <h2 className="text-3xl font-bold text-blue-700 mb-4 text-center">
+          Company Subscription
+        </h2>
 
-        {/* Code TVA */}
-        <input
-          type="text"
-          name="codeTva"
-          placeholder="Code TVA (0000000/x/x/x/000)"
-          value={form.codeTva}
-          onChange={handleChange}
-          className={`border p-3 mb-2 w-full rounded focus:ring-2 outline-none 
-            ${tvaError ? "border-red-500 focus:ring-red-400" : "border-gray-300 focus:ring-blue-500"}`}
-        />
-        {tvaError && (
-          <p className="text-red-500 text-sm mb-4">
-            Please provide a valid TVA Code in the format 0000000/x/x/x/000.
+        {/* Company Info Section */}
+        <div>
+          <h3 className="text-xl font-semibold mb-2">🏢 Company Information</h3>
+          <label className="block text-sm font-medium">Company Name (Nom Compte)</label>
+          <input
+            type="text"
+            placeholder="Example: ONPS"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            className="w-full border p-2 rounded mb-3 focus:ring-2 focus:ring-blue-500"
+            required
+          />
+
+          <label className="block text-sm font-medium">Fiscal ID (Matricule Fiscal)</label>
+          <input
+            type="text"
+            placeholder="0000000XXX000"
+            value={matriculeFiscal}
+            onChange={(e) => handleFiscalChange(e.target.value.toUpperCase())}
+            className={`w-full border p-2 rounded focus:ring-2 ${
+              errorFiscal ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+            }`}
+            required
+          />
+          {errorFiscal && <p className="text-red-500 text-xs">{errorFiscal}</p>}
+        </div>
+
+        {/* Contact Email */}
+        <div>
+          <h3 className="text-xl font-semibold mb-2">📧 Contact Email</h3>
+          <label className="block text-sm font-medium">Email</label>
+          <input
+            type="email"
+            placeholder="you@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <p className="text-xs text-gray-500">
+            We’ll send your login details (Client Code + Password) to this email.
           </p>
-        )}
+        </div>
 
-        {/* Category */}
-        <select
-          name="category"
-          value={form.category}
-          onChange={handleChange}
-          className="border border-gray-300 p-3 mb-4 w-full rounded focus:ring-2 focus:ring-blue-500 outline-none"
-        >
-          <option value="">Select Category</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
+        {/* Connection Info Section */}
+        <div>
+          <h3 className="text-xl font-semibold mb-2">🔌 Connection Settings</h3>
+          <label className="block text-sm font-medium">Mode de connexion</label>
+          <select
+            value={modeConnexion}
+            onChange={(e) => setModeConnexion(e.target.value)}
+            className="w-full border p-2 rounded mb-3 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="SMTP">📧 Email (SMTP)</option>
+            <option value="FTP">📂 File Transfer (FTP)</option>
+            <option value="API">🌐 API (Web Service)</option>
+          </select>
 
-        {/* TVA Type */}
-        <select
-          name="tvaType"
-          value={form.tvaType}
-          onChange={handleChange}
-          className="border border-gray-300 p-3 mb-4 w-full rounded focus:ring-2 focus:ring-blue-500 outline-none"
-        >
-          <option value="">Select TVA Type</option>
-          {tvaTypes.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
+          <label className="block text-sm font-medium">Rang du compte</label>
+          <select
+            value={rangCompte}
+            onChange={(e) => setRangCompte(e.target.value)}
+            className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="NP">Network Participant (NP)</option>
+            <option value="SP">Service Provider (SP)</option>
+            <option value="CL">Client (CL)</option>
+          </select>
+        </div>
 
-        {/* Name */}
-        <input
-          type="text"
-          name="name"
-          placeholder="Full Name"
-          value={form.name}
-          onChange={handleChange}
-          className="border border-gray-300 p-3 mb-4 w-full rounded focus:ring-2 focus:ring-blue-500 outline-none"
-        />
+        {/* Profile Section */}
+        <div>
+          <h3 className="text-xl font-semibold mb-2">🏷️ Company Profile</h3>
+          <label className="block text-sm font-medium">Profil</label>
+          <select
+            value={profil}
+            onChange={(e) => setProfil(e.target.value)}
+            className="w-full border p-2 rounded mb-3 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="Banques">Banking (Banques)</option>
+            <option value="Retail">Retail</option>
+            <option value="Transport">Transport</option>
+            <option value="Technology">Technology</option>
+            <option value="Service">Service</option>
+          </select>
+        </div>
 
-        {/* Phone */}
-        <input
-          type="tel"
-          name="phone"
-          placeholder="Phone Number"
-          value={form.phone}
-          onChange={handleChange}
-          className="border border-gray-300 p-3 mb-4 w-full rounded focus:ring-2 focus:ring-blue-500 outline-none"
-        />
-
-        {/* Additional Contact Info */}
-        <textarea
-          name="additionalContact"
-          placeholder="Additional Contact Information"
-          value={form.additionalContact}
-          onChange={handleChange}
-          className="border border-gray-300 p-3 mb-6 w-full rounded focus:ring-2 focus:ring-blue-500 outline-none"
-        ></textarea>
-
-        {/* Submit */}
         <button
-          onClick={handleSubscribe}
-          className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition text-lg font-semibold"
+          type="submit"
+          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition text-lg font-semibold"
         >
-          Submit for Verification
+          Save Subscription
         </button>
-      </div>
+      </form>
     </div>
   );
 }
