@@ -125,7 +125,7 @@ router.put("/clients/update/:id", async (req, res) => {
   }
 });
 
-// DELETE a client
+// DELETE a client  
 router.delete("/clients/delete/:id", async (req, res) => {
   try {
     await pool.query("DELETE FROM clients WHERE id = ?", [req.params.id]);

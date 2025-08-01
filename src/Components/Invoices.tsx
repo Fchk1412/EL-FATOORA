@@ -1,251 +1,234 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Navbar from "./Navbar";
 
-interface LineItem {
+interface Client {
   id: number;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  tax: number;
-  total: number;
+  name: string;
+}
+
+interface Product {
+  id: number;
+  product_name: string;
+  price: number;
+  tax_rate: number;
 }
 
 export default function Invoices() {
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedClient, setSelectedClient] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [issueDate, setIssueDate] = useState(new Date().toISOString().slice(0, 10));
-  const [sellerTVA, setSellerTVA] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [customerTVA, setCustomerTVA] = useState("");
-  const [customerAddress, setCustomerAddress] = useState("");
-  const [paymentTermCode, setPaymentTermCode] = useState("30D");
-  const [paymentTermDesc, setPaymentTermDesc] = useState("Net 30");
-  const [lineItems, setLineItems] = useState<LineItem[]>([]);
-  const [nextId, setNextId] = useState(1);
+  const [invoiceDate, setInvoiceDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [paymentTerms, setPaymentTerms] = useState("");
+  const [paymentRib, setPaymentRib] = useState("");
+  const [items, setItems] = useState<any[]>([]);
 
-  function addLineItem() {
-    setLineItems((prev) => [
-      ...prev,
-      { id: nextId, productName: "", quantity: 1, unitPrice: 0, tax: 0, total: 0 },
-    ]);
-    setNextId((id) => id + 1);
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/clients/${user.clientCode}`)
+      .then((res) => res.json())
+      .then(setClients);
+
+    fetch(`http://localhost:5000/api/products/${user.clientCode}`)
+      .then((res) => res.json())
+      .then(setProducts);
+
+    fetch(`http://localhost:5000/api/invoices/${user.clientCode}`)
+      .then((res) => res.json())
+      .then(setInvoices);
+  }, []);
+
+  function addItem() {
+    setItems([...items, { product_id: "", quantity: 1 }]);
   }
 
-  function calculateTotal(q: number, u: number, t: number) {
-    const base = q * u;
-    return parseFloat((base + (base * t) / 100).toFixed(2));
+  function handleItemChange(index: number, field: string, value: any) {
+    const updated = [...items];
+    updated[index][field] = value;
+    setItems(updated);
   }
 
-  function handleLineChange(
-    id: number,
-    field: keyof Omit<LineItem, "total">,
-    raw: string | number
-  ) {
-    setLineItems((prev) =>
-      prev.map((item) => {
-        if (item.id !== id) return item;
-        const value = field === "productName" ? String(raw) : Number(raw);
-        const updated = { ...item, [field]: value } as LineItem;
-        updated.total = calculateTotal(
-          updated.quantity,
-          updated.unitPrice,
-          updated.tax
-        );
-        return updated;
-      })
-    );
-  }
-
-  function removeLineItem(id: number) {
-    setLineItems((prev) => prev.filter((i) => i.id !== id));
-  }
-
-  const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
-  const totalTax = lineItems.reduce(
-    (s, i) => s + (i.quantity * i.unitPrice * i.tax) / 100,
-    0
-  );
-  const grandTotal = subtotal + totalTax;
-
-  function handleGeneratePDF() {
-    if (!sellerTVA || !invoiceNumber || lineItems.length === 0) {
-      return alert("Please fill in seller TVA, invoice number, and at least one line item.");
-    }
-
+  function handleSubmit() {
     const payload = {
-      invoiceNumber,
-      issueDate,
-      seller: { tva: sellerTVA },
-      client: { name: customerName, tva: customerTVA, address: customerAddress },
-      payment: { code: paymentTermCode, description: paymentTermDesc },
-      lineItems,
-      totals: {
-        subtotal: subtotal.toFixed(2),
-        totalTax: totalTax.toFixed(2),
-        grandTotal: grandTotal.toFixed(2),
-      },
+      company_id: user.clientCode,
+      client_id: selectedClient,
+      invoice_number: invoiceNumber,
+      document_type: "Facture",
+      invoice_date: invoiceDate,
+      due_date: dueDate,
+      payment_terms: paymentTerms,
+      payment_rib: paymentRib,
+      stamp_duty: 0.300,
+      items: items.map((item) => {
+        const product = products.find((p) => p.id === parseInt(item.product_id));
+        return {
+          product_id: product?.id,
+          quantity: item.quantity,
+          unit_price: product?.price,
+          tax_rate: product?.tax_rate,
+        };
+      }),
     };
 
-    fetch("http://localhost:5000/api/generate-invoice", {
+    fetch("http://localhost:5000/api/invoices/add", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-      .then((res) => res.blob())
-      .then((pdfBlob) => {
-        const url = URL.createObjectURL(pdfBlob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${invoiceNumber}.pdf`;
-        a.click();
+      .then((res) => res.json())
+      .then(() => {
+        alert("✅ Invoice created");
+        window.location.reload();
       })
-      .catch((e) => alert("Error generating PDF invoice: " + e.message));
+      .catch(() => alert("❌ Error saving invoice"));
+  }
+
+  function handleDelete(id: number) {
+    fetch(`http://localhost:5000/api/invoices/delete/${id}`, {
+      method: "DELETE",
+    })
+      .then(() => {
+        alert("🗑️ Invoice deleted");
+        window.location.reload();
+      })
+      .catch(() => alert("❌ Error deleting invoice"));
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-10">
-      <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">
-        Create Invoice
-      </h2>
+    <div className="min-h-screen bg-gray-100">
+      <Navbar />
+      <div className="p-10 max-w-6xl mx-auto">
+        <h2 className="text-3xl font-bold mb-6 text-blue-700 text-center">Manage Invoices</h2>
 
-      <div className="bg-white p-6 rounded-xl shadow-md max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            type="text"
-            placeholder="Seller TVA"
-            value={sellerTVA}
-            onChange={(e) => setSellerTVA(e.target.value)}
-            className="border p-2 rounded focus:ring-2 focus:ring-blue-500 w-full"
-          />
-          <input
-            type="text"
-            placeholder="Invoice Number"
-            value={invoiceNumber}
-            onChange={(e) => setInvoiceNumber(e.target.value)}
-            className="border p-2 rounded focus:ring-2 focus:ring-blue-500 w-full"
-          />
-          <input
-            type="date"
-            value={issueDate}
-            onChange={(e) => setIssueDate(e.target.value)}
-            className="border p-2 rounded focus:ring-2 focus:ring-blue-500 w-full"
-          />
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Invoice List */}
+          <div className="bg-white p-6 rounded shadow">
+            <h3 className="text-xl mb-4">Invoices</h3>
+            {invoices.length === 0 ? (
+              <p>No invoices yet.</p>
+            ) : (
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-200">
+                    <th className="p-2">Invoice #</th>
+                    <th className="p-2">Client</th>
+                    <th className="p-2">Total</th>
+                    <th className="p-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.map((inv) => (
+                    <tr key={inv.id} className="border-b">
+                      <td className="p-2">{inv.invoice_number}</td>
+                      <td className="p-2">{inv.client_name}</td>
+                      <td className="p-2">{inv.total_amount} DT</td>
+                      <td className="p-2">
+                        <button
+                          onClick={() => handleDelete(inv.id)}
+                          className="px-3 py-1 bg-red-500 text-white rounded"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
 
-        {/* Client Info */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            type="text"
-            placeholder="Client Name"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            className="border p-2 rounded focus:ring-2 focus:ring-blue-500 w-full"
-          />
-          <input
-            type="text"
-            placeholder="Client TVA"
-            value={customerTVA}
-            onChange={(e) => setCustomerTVA(e.target.value)}
-            className="border p-2 rounded focus:ring-2 focus:ring-blue-500 w-full"
-          />
-          <input
-            type="text"
-            placeholder="Client Address"
-            value={customerAddress}
-            onChange={(e) => setCustomerAddress(e.target.value)}
-            className="border p-2 rounded focus:ring-2 focus:ring-blue-500 w-full"
-          />
-        </div>
+          {/* Invoice Form */}
+          <div className="bg-white p-6 rounded shadow">
+            <h3 className="text-xl mb-4">Create Invoice</h3>
+            <select
+              className="border p-2 w-full mb-3"
+              value={selectedClient}
+              onChange={(e) => setSelectedClient(e.target.value)}
+            >
+              <option value="">Select Client</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
 
-        {/* Payment Terms */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Payment Term Code"
-            value={paymentTermCode}
-            onChange={(e) => setPaymentTermCode(e.target.value)}
-            className="border p-2 rounded focus:ring-2 focus:ring-blue-500 w-full"
-          />
-          <input
-            type="text"
-            placeholder="Payment Term Description"
-            value={paymentTermDesc}
-            onChange={(e) => setPaymentTermDesc(e.target.value)}
-            className="border p-2 rounded focus:ring-2 focus:ring-blue-500 w-full"
-          />
-        </div>
+            <input
+              type="text"
+              placeholder="Invoice Number"
+              className="border p-2 w-full mb-3"
+              value={invoiceNumber}
+              onChange={(e) => setInvoiceNumber(e.target.value)}
+            />
+            <input
+              type="date"
+              className="border p-2 w-full mb-3"
+              value={invoiceDate}
+              onChange={(e) => setInvoiceDate(e.target.value)}
+            />
+            <input
+              type="date"
+              className="border p-2 w-full mb-3"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Payment Terms"
+              className="border p-2 w-full mb-3"
+              value={paymentTerms}
+              onChange={(e) => setPaymentTerms(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Payment RIB"
+              className="border p-2 w-full mb-3"
+              value={paymentRib}
+              onChange={(e) => setPaymentRib(e.target.value)}
+            />
 
-        {/* Line Items */}
-        <div className="space-y-2">
-          {lineItems.map((item) => (
-            <div key={item.id} className="grid grid-cols-1 md:grid-cols-5 gap-2 items-center">
-              <input
-                type="text"
-                placeholder="Product"
-                value={item.productName}
-                onChange={(e) => handleLineChange(item.id, "productName", e.target.value)}
-                className="border p-2 rounded"
-              />
-              <input
-                type="number"
-                min="1"
-                value={item.quantity}
-                onChange={(e) => handleLineChange(item.id, "quantity", e.target.value)}
-                className="border p-2 rounded"
-              />
-              <input
-                type="number"
-                min="0"
-                value={item.unitPrice}
-                onChange={(e) => handleLineChange(item.id, "unitPrice", e.target.value)}
-                className="border p-2 rounded"
-              />
-              <select
-                value={item.tax}
-                onChange={(e) => handleLineChange(item.id, "tax", e.target.value)}
-                className="border p-2 rounded"
-              >
-                <option value={0}>0%</option>
-                <option value={7}>7%</option>
-                <option value={13}>13%</option>
-                <option value={19}>19%</option>
-              </select>
-              <div className="flex justify-between items-center">
-                <span>{item.total.toFixed(2)} DT</span>
-                <button
-                  onClick={() => removeLineItem(item.id)}
-                  className="px-2 py-1 bg-red-500 text-white rounded"
+            <h4 className="font-semibold mb-2">Invoice Items</h4>
+            {items.map((item, idx) => (
+              <div key={idx} className="flex gap-2 mb-2">
+                <select
+                  className="border p-2 flex-1"
+                  value={item.product_id}
+                  onChange={(e) => handleItemChange(idx, "product_id", e.target.value)}
                 >
-                  ✕
-                </button>
+                  <option value="">Select Product</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.product_name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  className="border p-2 w-20"
+                  value={item.quantity}
+                  onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
+                />
               </div>
-            </div>
-          ))}
-          <button
-            onClick={addLineItem}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            + Add Line
-          </button>
-        </div>
+            ))}
+            <button
+              type="button"
+              className="bg-gray-300 px-3 py-1 rounded mb-4"
+              onClick={addItem}
+            >
+              + Add Item
+            </button>
 
-        {/* Totals & Generate */}
-        <div className="bg-blue-50 p-4 rounded space-y-1">
-          <p>Subtotal: {subtotal.toFixed(2)} DT</p>
-          <p>Total Tax: {totalTax.toFixed(2)} DT</p>
-          <p className="font-bold">Grand Total: {grandTotal.toFixed(2)} DT</p>
+            <button
+              onClick={handleSubmit}
+              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+            >
+              Create Invoice
+            </button>
+          </div>
         </div>
-
-        <button
-          onClick={handleGeneratePDF}
-          disabled={lineItems.length === 0}
-          className={`w-full px-6 py-3 rounded-lg text-lg font-semibold transition ${
-            lineItems.length === 0
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-          } text-white`}
-        >
-          Download Invoice PDF
-        </button>
       </div>
     </div>
   );
