@@ -1,104 +1,111 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Client {
   id: number;
+  client_code: string;
   name: string;
-  tva: string;
-  address: string;
+  matricule_fiscal: string;
+  email: string;
+  street: string;
+  city: string;
+  postal_code: string;
+  country: string;
   phone: string;
 }
 
 export default function Clients() {
   const [clients, setClients] = useState<Client[]>([]);
-  const [form, setForm] = useState({ name: "", tva: "", address: "", phone: "" });
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState({
+    client_code: "",               // optional
+    name: "",
+    matricule_fiscal: "",
+    email: "",
+    street: "",
+    city: "",
+    postal_code: "",
+    country: "",
+    phone: "",
+  });
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  // Pull your company_id from wherever you stored it at login:
+  const companyId = Number(localStorage.getItem("company_id"));
+
+  useEffect(() => {
+    if (!companyId) return;
+    fetch(`http://localhost:5000/api/clients/${companyId}`)
+      .then((r) => r.json())
+      .then(setClients)
+      .catch(console.error);
+  }, [companyId]);
+
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement>
+  ) {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((f) => ({ ...f, [name]: value }));
   }
 
-  function handleAddOrUpdate() {
-    if (!form.name || !form.tva) {
-      alert("Please fill out at least the name and TVA.");
-      return;
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!companyId) {
+      return alert("You must be logged in as a company first.");
     }
-
-    if (editingId !== null) {
-      setClients((prev) =>
-        prev.map((client) =>
-          client.id === editingId ? { ...client, ...form } : client
-        )
-      );
-      setEditingId(null);
-    } else {
-      const newClient: Client = {
-        id: Date.now(),
+    // Send company_id as a number
+    fetch("http://localhost:5000/api/clients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         ...form,
-      };
-      setClients((prev) => [...prev, newClient]);
-    }
-
-    setForm({ name: "", tva: "", address: "", phone: "" });
-  }
-
-  function handleEdit(id: number) {
-    const client = clients.find((c) => c.id === id);
-    if (client) {
-      setForm({
-        name: client.name,
-        tva: client.tva,
-        address: client.address,
-        phone: client.phone,
-      });
-      setEditingId(id);
-    }
-  }
-
-  function handleDelete(id: number) {
-    setClients((prev) => prev.filter((c) => c.id !== id));
+        company_id: companyId,
+      }),
+    })
+      .then((r) => r.json())
+      .then(() => {
+        // reset
+        setForm({
+          client_code: "",
+          name: "",
+          matricule_fiscal: "",
+          email: "",
+          street: "",
+          city: "",
+          postal_code: "",
+          country: "",
+          phone: "",
+        });
+        // reload list
+        return fetch(`http://localhost:5000/api/clients/${companyId}`);
+      })
+      .then((r) => r.json())
+      .then(setClients)
+      .catch(console.error);
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-10">
+    <div className="p-10 bg-gray-100 min-h-screen">
       <h2 className="text-3xl font-bold mb-6 text-center text-blue-700">
         Manage Clients
       </h2>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
-        {/* Client List */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4 text-blue-600">Client List</h3>
+        {/* Existing Clients */}
+        <div className="bg-white p-6 rounded-xl shadow-md overflow-auto">
           {clients.length === 0 ? (
-            <p className="text-gray-500">No clients added yet.</p>
+            <p>No clients yet.</p>
           ) : (
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-blue-100 text-left text-blue-700">
+                <tr className="bg-gray-200">
                   <th className="p-2">Name</th>
-                  <th className="p-2">TVA</th>
-                  <th className="p-2">Actions</th>
+                  <th className="p-2">Code</th>
+                  <th className="p-2">Fiscal ID</th>
                 </tr>
               </thead>
               <tbody>
-                {clients.map((client) => (
-                  <tr key={client.id} className="border-b">
-                    <td className="p-2">{client.name}</td>
-                    <td className="p-2">{client.tva}</td>
-                    <td className="p-2 flex gap-2">
-                      <button
-                        onClick={() => handleEdit(client.id)}
-                        className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(client.id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                      >
-                        Delete
-                      </button>
-                    </td>
+                {clients.map((c) => (
+                  <tr key={c.id} className="border-b">
+                    <td className="p-2">{c.name}</td>
+                    <td className="p-2">{c.client_code}</td>
+                    <td className="p-2">{c.matricule_fiscal}</td>
                   </tr>
                 ))}
               </tbody>
@@ -106,49 +113,81 @@ export default function Clients() {
           )}
         </div>
 
-        {/* Add/Edit Client Form */}
+        {/* Add Client Form */}
         <div className="bg-white p-6 rounded-xl shadow-md">
-          <h3 className="text-xl font-semibold mb-4 text-blue-600">
-            {editingId ? "Edit Client" : "Add Client"}
-          </h3>
-          <input
-            type="text"
-            name="name"
-            placeholder="Client Name"
-            value={form.name}
-            onChange={handleChange}
-            className="border border-gray-300 p-3 mb-4 w-full rounded focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-          <input
-            type="text"
-            name="tva"
-            placeholder="Client TVA"
-            value={form.tva}
-            onChange={handleChange}
-            className="border border-gray-300 p-3 mb-4 w-full rounded focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-          <input
-            type="text"
-            name="address"
-            placeholder="Client Address"
-            value={form.address}
-            onChange={handleChange}
-            className="border border-gray-300 p-3 mb-4 w-full rounded focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-          <input
-            type="text"
-            name="phone"
-            placeholder="Client Phone"
-            value={form.phone}
-            onChange={handleChange}
-            className="border border-gray-300 p-3 mb-4 w-full rounded focus:ring-2 focus:ring-blue-500 outline-none"
-          />
-          <button
-            onClick={handleAddOrUpdate}
-            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition text-lg font-semibold"
-          >
-            {editingId ? "Update Client" : "Add Client"}
-          </button>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <input
+              name="client_code"
+              value={form.client_code}
+              onChange={handleChange}
+              placeholder="Client Code (optional)"
+              className="border p-2 rounded w-full"
+            />
+            <input
+              name="name"
+              value={form.name}
+              onChange={handleChange}
+              placeholder="Client Name"
+              required
+              className="border p-2 rounded w-full"
+            />
+            <input
+              name="matricule_fiscal"
+              value={form.matricule_fiscal}
+              onChange={handleChange}
+              placeholder="Fiscal ID (defaults to 999999999)"
+              className="border p-2 rounded w-full"
+            />
+            <input
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="Email"
+              className="border p-2 rounded w-full"
+            />
+            <input
+              name="street"
+              value={form.street}
+              onChange={handleChange}
+              placeholder="Street"
+              className="border p-2 rounded w-full"
+            />
+            <input
+              name="city"
+              value={form.city}
+              onChange={handleChange}
+              placeholder="City"
+              className="border p-2 rounded w-full"
+            />
+            <input
+              name="postal_code"
+              value={form.postal_code}
+              onChange={handleChange}
+              placeholder="Postal Code"
+              className="border p-2 rounded w-full"
+            />
+            <input
+              name="country"
+              value={form.country}
+              onChange={handleChange}
+              placeholder="Country (ISO code)"
+              className="border p-2 rounded w-full"
+            />
+            <input
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              placeholder="Phone"
+              className="border p-2 rounded w-full"
+            />
+
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+            >
+              Add Client
+            </button>
+          </form>
         </div>
       </div>
     </div>

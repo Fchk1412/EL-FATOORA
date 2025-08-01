@@ -7,6 +7,7 @@ const path = require("path");
 const subscribeRoute = require("./routes/subscribe.cjs");
 const authRoute = require("./routes/auth.cjs");
 const productsRoute = require("./routes/products.cjs");
+const clientsRoute = require("./routes/clients.cjs");
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
@@ -17,6 +18,8 @@ app.use("/api", subscribeRoute);
 app.use("/api", authRoute);
 // ✅ Products route
 app.use("/api", productsRoute);
+// ✅ Clients route
+app.use("/api", clientsRoute);
 
 // ✅ Invoice generation
 const imagePath = path.join(__dirname, "invoice templet.jpg");

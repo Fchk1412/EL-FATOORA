@@ -66,7 +66,7 @@ export default function Subscription() {
 
         {/* Company Info Section */}
         <div>
-          <h3 className="text-xl font-semibold mb-2">🏢 Company Information</h3>
+          <h3 className="text-xl font-semibold mb-2"> Company Information</h3>
           <label className="block text-sm font-medium">Company Name (Nom Compte)</label>
           <input
             type="text"
@@ -93,7 +93,7 @@ export default function Subscription() {
 
         {/* Contact Email */}
         <div>
-          <h3 className="text-xl font-semibold mb-2">📧 Contact Email</h3>
+          <h3 className="text-xl font-semibold mb-2"> Contact Email</h3>
           <label className="block text-sm font-medium">Email</label>
           <input
             type="email"
@@ -110,16 +110,16 @@ export default function Subscription() {
 
         {/* Connection Info Section */}
         <div>
-          <h3 className="text-xl font-semibold mb-2">🔌 Connection Settings</h3>
+          <h3 className="text-xl font-semibold mb-2"> Connection Settings</h3>
           <label className="block text-sm font-medium">Mode de connexion</label>
           <select
             value={modeConnexion}
             onChange={(e) => setModeConnexion(e.target.value)}
             className="w-full border p-2 rounded mb-3 focus:ring-2 focus:ring-blue-500"
           >
-            <option value="SMTP">📧 Email (SMTP)</option>
-            <option value="FTP">📂 File Transfer (FTP)</option>
-            <option value="API">🌐 API (Web Service)</option>
+            <option value="SMTP"> Email (SMTP)</option>
+            <option value="FTP"> File Transfer (FTP)</option>
+            <option value="API"> API (Web Service)</option>
           </select>
 
           <label className="block text-sm font-medium">Rang du compte</label>
@@ -136,7 +136,7 @@ export default function Subscription() {
 
         {/* Profile Section */}
         <div>
-          <h3 className="text-xl font-semibold mb-2">🏷️ Company Profile</h3>
+          <h3 className="text-xl font-semibold mb-2"> Company Profile</h3>
           <label className="block text-sm font-medium">Profil</label>
           <select
             value={profil}

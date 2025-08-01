@@ -1,31 +1,47 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+interface LoginResponse {
+  message:      string;
+  company_id:   number;
+  clientCode:   string;
+  companyName:  string;
+  email:        string;
+  error?:       string;
+}
+
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [error, setError]       = useState("");
+  const navigate                = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     fetch("http://localhost:5000/api/login", {
-      method: "POST",
+      method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body:    JSON.stringify({ email, password }),
     })
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: LoginResponse) => {
         if (data.error) {
           setError(data.error);
-        } else {
-          // Save session info in localStorage
-          localStorage.setItem("user", JSON.stringify(data));
-          navigate("/dashboard");
+          return;
         }
+
+        // 1) Save full user object
+        localStorage.setItem("user", JSON.stringify(data));
+        // 2) Save numeric company_id for easier access
+        localStorage.setItem("company_id", String(data.company_id));
+
+        navigate("/dashboard");
       })
-      .catch(() => setError("Failed to connect to server."));
+      .catch(() => {
+        setError("Failed to connect to server.");
+      });
   };
 
   return (
@@ -46,6 +62,7 @@ export default function Login() {
           className="w-full border p-2 rounded"
           required
         />
+
         <input
           type="password"
           placeholder="Password"

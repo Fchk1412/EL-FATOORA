@@ -8,26 +8,30 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find company by email
-    const [rows] = await pool.query("SELECT * FROM companies WHERE email = ?", [email]);
+    // 1) Find company by email
+    const [rows] = await pool.query(
+      "SELECT id, client_code, company_name, email, password_hash FROM companies WHERE email = ?",
+      [email]
+    );
     if (rows.length === 0) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const company = rows[0];
 
-    // Compare password
+    // 2) Compare password
     const isMatch = await bcrypt.compare(password, company.password_hash);
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Send success + client info
+    // 3) Return success + all needed fields
     res.json({
-      message: "Login successful",
-      clientCode: company.client_code,
-      companyName: company.company_name,
-      email: company.email,
+      message:      "Login successful",
+      company_id:   company.id,           // <— numeric ID
+      clientCode:   company.client_code,
+      companyName:  company.company_name,
+      email:        company.email
     });
   } catch (err) {
     console.error(err);
