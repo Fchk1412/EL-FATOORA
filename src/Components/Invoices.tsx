@@ -28,18 +28,23 @@ export default function Invoices() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/clients/${user.clientCode}`)
+    // — Fetch clients by numeric company_id
+    fetch(`http://localhost:5000/api/clients/${user.company_id}`)
       .then((res) => res.json())
-      .then(setClients);
+      .then((data) => setClients(data))
+      .catch((err) => console.error("Error fetching clients:", err));
 
+    // — Fetch products & invoices (unchanged)
     fetch(`http://localhost:5000/api/products/${user.clientCode}`)
       .then((res) => res.json())
-      .then(setProducts);
+      .then((data) => setProducts(data))
+      .catch((err) => console.error("Error fetching products:", err));
 
     fetch(`http://localhost:5000/api/invoices/${user.clientCode}`)
       .then((res) => res.json())
-      .then(setInvoices);
-  }, []);
+      .then((data) => setInvoices(data))
+      .catch((err) => console.error("Error fetching invoices:", err));
+  }, [user.company_id, user.clientCode]);
 
   function addItem() {
     setItems([...items, { product_id: "", quantity: 1 }]);
@@ -143,17 +148,23 @@ export default function Invoices() {
           {/* Invoice Form */}
           <div className="bg-white p-6 rounded shadow">
             <h3 className="text-xl mb-4">Create Invoice</h3>
+
+            {/* ← ONLY this select was changed to use company_id */}
             <select
               className="border p-2 w-full mb-3"
               value={selectedClient}
               onChange={(e) => setSelectedClient(e.target.value)}
             >
               <option value="">Select Client</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
+              {clients.length > 0 ? (
+                clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))
+              ) : (
+                <option disabled>No clients available</option>
+              )}
             </select>
 
             <input
