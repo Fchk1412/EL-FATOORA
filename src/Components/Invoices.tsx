@@ -34,13 +34,14 @@ export default function Invoices() {
       .then((data) => setClients(data))
       .catch((err) => console.error("Error fetching clients:", err));
 
-    // — Fetch products & invoices (unchanged)
+    // — Fetch products using clientCode
     fetch(`http://localhost:5000/api/products/${user.clientCode}`)
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch((err) => console.error("Error fetching products:", err));
 
-    fetch(`http://localhost:5000/api/invoices/${user.clientCode}`)
+    // — Fetch invoices using numeric company_id
+    fetch(`http://localhost:5000/api/invoices/company/${user.company_id}`)
       .then((res) => res.json())
       .then((data) => setInvoices(data))
       .catch((err) => console.error("Error fetching invoices:", err));
@@ -58,7 +59,7 @@ export default function Invoices() {
 
   function handleSubmit() {
     const payload = {
-      company_id: user.clientCode,
+      company_id: user.company_id, // ✅ Use numeric company_id instead of clientCode
       client_id: selectedClient,
       invoice_number: invoiceNumber,
       document_type: "Facture",
@@ -102,6 +103,10 @@ export default function Invoices() {
       .catch(() => alert("❌ Error deleting invoice"));
   }
 
+  function handleDownloadXML(invoiceId: number) {
+    window.open(`http://localhost:5000/api/invoices/xml/${invoiceId}`, '_blank');
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
@@ -130,10 +135,16 @@ export default function Invoices() {
                       <td className="p-2">{inv.invoice_number}</td>
                       <td className="p-2">{inv.client_name}</td>
                       <td className="p-2">{inv.total_amount} DT</td>
-                      <td className="p-2">
+                      <td className="p-2 flex gap-2">
+                        <button
+                          onClick={() => handleDownloadXML(inv.id)}
+                          className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                        >
+                          XML
+                        </button>
                         <button
                           onClick={() => handleDelete(inv.id)}
-                          className="px-3 py-1 bg-red-500 text-white rounded"
+                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                         >
                           Delete
                         </button>

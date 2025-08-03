@@ -90,4 +90,100 @@ router.get("/clients/:companyId", async (req, res) => {
   }
 });
 
+// Update client
+router.put("/clients/update/:id", async (req, res) => {
+  try {
+    const {
+      client_code,
+      name,
+      matricule_fiscal,
+      email,
+      street,
+      city,
+      postal_code,
+      country,
+      phone,
+    } = req.body;
+
+    await pool.query(
+      `UPDATE clients SET 
+        client_code = ?, name = ?, matricule_fiscal = ?, email = ?, 
+        street = ?, city = ?, postal_code = ?, country = ?, phone = ?
+       WHERE id = ?`,
+      [client_code, name, matricule_fiscal, email, street, city, postal_code, country, phone, req.params.id]
+    );
+
+    res.json({ message: "Client updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Add client (fix route path)
+router.post("/clients/add", async (req, res) => {
+  try {
+    const {
+      company_id,
+      client_code,
+      name,
+      matricule_fiscal,
+      email,
+      street,
+      city,
+      postal_code,
+      country,
+      phone,
+    } = req.body;
+
+    if (!company_id) {
+      return res.status(400).json({ error: "Missing company_id" });
+    }
+
+    const finalCode =
+      client_code && client_code.trim() !== ""
+        ? client_code
+        : await generateClientCode(company_id);
+
+    const fiscalId =
+      matricule_fiscal && matricule_fiscal.trim() !== ""
+        ? matricule_fiscal
+        : "999999999";
+
+    await pool.query(
+      `INSERT INTO clients
+        (company_id, client_code, name, matricule_fiscal, email, street, city, postal_code, country, phone)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        company_id,
+        finalCode,
+        name,
+        fiscalId,
+        email,
+        street,
+        city,
+        postal_code,
+        country,
+        phone,
+      ]
+    );
+
+    res.json({ message: "Client added" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Delete client
+router.delete("/clients/delete/:id", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM clients WHERE id = ?", [req.params.id]);
+    res.json({ message: "Client deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;
