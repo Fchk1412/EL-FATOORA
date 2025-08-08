@@ -1,9 +1,27 @@
 // backend/db.js
 import { Pool } from "pg";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Load environment variables
-dotenv.config();
+// ES module __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from multiple possible locations
+const envPaths = [
+  path.join(__dirname, "..", ".env"),
+  path.join(__dirname, "..", ".env.production"),
+  path.join(__dirname, "..", ".env.local"),
+];
+
+// Try loading environment files
+for (const envPath of envPaths) {
+  dotenv.config({ path: envPath, override: false });
+}
+
+// Also try default dotenv config
+dotenv.config({ override: false });
 
 // Debug environment variables
 console.log("🔍 Environment Check:");
@@ -12,6 +30,11 @@ console.log(
   "DATABASE_URL:",
   process.env.DATABASE_URL ? "✅ Set" : "❌ Not set"
 );
+if (process.env.DATABASE_URL) {
+  // Show only the host part for security
+  const url = new URL(process.env.DATABASE_URL);
+  console.log("DB Host:", url.hostname);
+}
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

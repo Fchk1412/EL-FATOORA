@@ -20,11 +20,6 @@
       "dest": "/$1"
     }
   ],
-  "env": {
-    "NODE_ENV": "production",
-    "DATABASE_URL": "@database_url",
-    "FRONTEND_URL": "@frontend_url"
-  },
   "functions": {
     "backend/server.js": {
       "maxDuration": 30

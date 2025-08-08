@@ -14,8 +14,9 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Import database connection
+// Import database connection and initialization
 import pool from "./db.js";
+import initializeDatabase from "./initDb.js";
 
 // Import routes
 import subscriptionRoute from "./routes/subscribe.js";
@@ -56,6 +57,47 @@ app.use("/api", authRoute);
 app.use("/api", productsRoute);
 app.use("/api", clientsRoute);
 app.use("/api", invoicesRoute);
+
+// Health check endpoint
+app.get("/api/health", async (req, res) => {
+  try {
+    const client = await pool.connect();
+    await client.query("SELECT 1");
+    client.release();
+
+    res.json({
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      database: "connected",
+      environment: process.env.NODE_ENV,
+      server: "running",
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "unhealthy",
+      timestamp: new Date().toISOString(),
+      database: "disconnected",
+      environment: process.env.NODE_ENV,
+      error: error.message,
+    });
+  }
+});
+
+// Root endpoint
+app.get("/", (req, res) => {
+  res.json({
+    message: "ElFatoura API Server",
+    version: "1.0.0",
+    status: "running",
+    endpoints: {
+      health: "/api/health",
+      auth: "/api/login",
+      clients: "/api/clients/company/:id",
+      products: "/api/products/company/:id",
+      invoices: "/api/invoices/company/:id",
+    },
+  });
+});
 
 // ✅ Invoice generation
 const imagePath = path.join(__dirname, "invoice templet.jpg");
@@ -111,19 +153,29 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 // Test database connection on startup
 async function testDatabaseConnection() {
   try {
+    console.log("🔌 Testing database connection...");
     const client = await pool.connect();
     console.log("✅ Database connection successful");
     client.release();
+
+    // Initialize database schema and sample data
+    await initializeDatabase();
+    console.log("✅ Database initialization complete");
+
+    return true;
   } catch (err) {
     console.error("❌ Database connection failed:", err);
     console.error(
       "DATABASE_URL:",
       process.env.DATABASE_URL ? "Set" : "Not set"
     );
-    // Don't exit in production, but log the error
+
+    // In production, don't exit but log the error
     if (process.env.NODE_ENV !== "production") {
+      console.error("Exiting due to database connection failure...");
       process.exit(1);
     }
+    return false;
   }
 }
 
