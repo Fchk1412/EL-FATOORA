@@ -7,8 +7,8 @@ import "./index.css";
 import Products from "./Components/Products";
 import Clients from "./Components/Clients";
 import Invoices from "./Components/Invoices";
-import Login from "./Components/login";
-import Dashboard from "./Components/dashboard";
+import Login from "./Components/Login";
+import Dashboard from "./Components/Dashboard";
 
 
 function App() {

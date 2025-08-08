@@ -1,27 +1,31 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const puppeteer = require("puppeteer");
-const fs = require("fs");
-const path = require("path");
-const subscribeRoute = require("./routes/subscribe.cjs");
-const authRoute = require("./routes/auth.cjs");
-const productsRoute = require("./routes/products.cjs");
-const clientsRoute = require("./routes/clients.cjs");
-const invoicesRoute = require("./routes/invoices.cjs");
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import puppeteer from "puppeteer";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// ES module __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Import routes
+import subscriptionRoute from "./routes/subscribe.js";
+import authRoute from "./routes/auth.js";
+import productsRoute from "./routes/products.js";
+import clientsRoute from "./routes/clients.js";
+import invoicesRoute from "./routes/invoices.js";
+
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Subscription route
-app.use("/api", subscribeRoute);
-// ✅ Authentication route
+// API Routes with consistent /api prefix
+app.use("/api", subscriptionRoute);
 app.use("/api", authRoute);
-// ✅ Products route
 app.use("/api", productsRoute);
-// ✅ Clients route
 app.use("/api", clientsRoute);
-// ✅ Invoices route
 app.use("/api", invoicesRoute);
 
 // ✅ Invoice generation
@@ -33,7 +37,10 @@ const imageDataUri = `data:image/jpeg;base64,${imageBase64}`;
 app.post("/api/generate-invoice", async (req, res) => {
   const data = req.body;
 
-  let html = fs.readFileSync(path.join(__dirname, "invoice-template.html"), "utf8");
+  let html = fs.readFileSync(
+    path.join(__dirname, "invoice-template.html"),
+    "utf8"
+  );
 
   html = html
     .replace("{{templatePath}}", imageDataUri)
@@ -53,4 +60,6 @@ app.post("/api/generate-invoice", async (req, res) => {
   res.send(pdf);
 });
 
-app.listen(5000, () => console.log("✅ Backend running on http://localhost:5000"));
+app.listen(5000, () =>
+  console.log("✅ Backend running on http://localhost:5000")
+);

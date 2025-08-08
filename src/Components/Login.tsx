@@ -2,28 +2,28 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface LoginResponse {
-  message:      string;
-  company_id:   number;
-  clientCode:   string;
-  companyName:  string;
-  email:        string;
-  error?:       string;
+  message: string;
+  company_id: number;
+  clientCode: string;
+  companyName: string;
+  email: string;
+  error?: string;
 }
 
 export default function Login() {
-  const [email, setEmail]       = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError]       = useState("");
-  const navigate                = useNavigate();
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    fetch("http://localhost:5000/api/login", {
-      method:  "POST",
+    fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password }),
     })
       .then((res) => res.json())
       .then((data: LoginResponse) => {
@@ -34,8 +34,8 @@ export default function Login() {
 
         // 1) Save full user object
         localStorage.setItem("user", JSON.stringify(data));
-        // 2) Save numeric company_id for easier access
-        localStorage.setItem("company_id", String(data.company_id));
+        // 2) Save numeric companyId for easier access
+        localStorage.setItem("companyId", String(data.company_id));
 
         navigate("/dashboard");
       })

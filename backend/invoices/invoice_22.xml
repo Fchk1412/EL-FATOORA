@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEIF xmlns:ds="http://www.w3.org/2000/09/xmldsig#" controlingAgency="TTN" version="1.8.8">
+  <InvoiceHeader>
+    <MessageSenderIdentifier type="I-01">1112345ALF123</MessageSenderIdentifier>
+    <MessageRecieverIdentifier type="I-01">12345678</MessageRecieverIdentifier>
+  </InvoiceHeader>
+  <InvoiceBody>
+    <Bgm>
+      <DocumentIdentifier>12345</DocumentIdentifier>
+      <DocumentType code="I-11">Facture</DocumentType>
+    </Bgm>
+    <Dtm>
+      <DateText format="ddMMyy" functionCode="I-31">090825</DateText>
+      <DateText format="ddMMyy" functionCode="I-32">210825</DateText>
+    </Dtm>
+    <PartnerSection>
+      <PartnerDetails functionCode="I-62">
+        <Nad>
+          <PartnerIdentifier type="I-01">1112345ALF123</PartnerIdentifier>
+          <PartnerName nameType="Qualification">adem lel technologia</PartnerName>
+          <PartnerAdresses lang="fr">
+            <AdressDescription/>
+            <Street/>
+            <CityName/>
+            <PostalCode/>
+            <Country codeList="ISO_3166-1">TN</Country>
+          </PartnerAdresses>
+        </Nad>
+      </PartnerDetails>
+      <PartnerDetails functionCode="I-64">
+        <Nad>
+          <PartnerIdentifier type="I-01">12345678</PartnerIdentifier>
+          <PartnerName nameType="Qualification">NABIL HAMADI</PartnerName>
+          <PartnerAdresses lang="fr">
+            <AdressDescription>25 rue ettayeb lemhiri</AdressDescription>
+            <Street/>
+            <CityName>Ariana</CityName>
+            <PostalCode>2080</PostalCode>
+            <Country codeList="ISO_3166-1">TN</Country>
+          </PartnerAdresses>
+        </Nad>
+      </PartnerDetails>
+    </PartnerSection>
+    <PytSection>
+      <PytSectionDetails>
+        <Pyt>
+          <PaymentTearmsTypeCode>I-114</PaymentTearmsTypeCode>
+          <PaymentTearmsDescription>idk</PaymentTearmsDescription>
+        </Pyt>
+        <Pyt>
+          <PaymentTearmsTypeCode>I-115</PaymentTearmsTypeCode>
+          <PaymentTearmsDescription>RIB: 12345123</PaymentTearmsDescription>
+        </Pyt>
+      </PytSectionDetails>
+    </PytSection>
+    <LinSection>
+      <Lin>
+        <ItemIdentifier>1</ItemIdentifier>
+        <LinImd lang="fr">
+          <ItemCode>pcp</ItemCode>
+          <ItemDescription>pc portable</ItemDescription>
+        </LinImd>
+        <LinQty>
+          <Quantity measurementUnit="UNIT">3.000</Quantity>
+        </LinQty>
+        <LinTax>
+          <TaxTypeName code="I-1602">TVA</TaxTypeName>
+          <TaxDetails>
+            <TaxRate>7.00</TaxRate>
+          </TaxDetails>
+        </LinTax>
+        <LinMoa>
+          <MoaDetails>
+            <Moa amountTypeCode="I-183" currencyCodeList="ISO_4217">
+              <Amount currencyIdentifier="TND">300.000</Amount>
+            </Moa>
+          </MoaDetails>
+          <MoaDetails>
+            <Moa amountTypeCode="I-171" currencyCodeList="ISO_4217">
+              <Amount currencyIdentifier="TND">900.000</Amount>
+            </Moa>
+          </MoaDetails>
+        </LinMoa>
+      </Lin>
+    </LinSection>
+    <InvoiceMoa>
+      <AmountDetails>
+        <Moa amountTypeCode="I-176" currencyCodeList="ISO_4217">
+          <Amount currencyIdentifier="TND">900.000</Amount>
+        </Moa>
+      </AmountDetails>
+      <AmountDetails>
+        <Moa amountTypeCode="I-180" currencyCodeList="ISO_4217">
+          <Amount currencyIdentifier="TND">963.000</Amount>
+          <AmountDescription lang="fr"/>
+        </Moa>
+      </AmountDetails>
+      <AmountDetails>
+        <Moa amountTypeCode="I-181" currencyCodeList="ISO_4217">
+          <Amount currencyIdentifier="TND">63.000</Amount>
+        </Moa>
+      </AmountDetails>
+    </InvoiceMoa>
+    <InvoiceTax>
+      <InvoiceTaxDetails>
+        <Tax>
+          <TaxTypeName code="I-1601">droit de timbre</TaxTypeName>
+          <TaxDetails>
+            <TaxRate>0.00</TaxRate>
+          </TaxDetails>
+        </Tax>
+        <AmountDetails>
+          <Moa amountTypeCode="I-178" currencyCodeList="ISO_4217">
+            <Amount currencyIdentifier="TND">0.300</Amount>
+          </Moa>
+        </AmountDetails>
+      </InvoiceTaxDetails>
+      <InvoiceTaxDetails>
+        <Tax>
+          <TaxTypeName code="I-1602">TVA</TaxTypeName>
+          <TaxDetails>
+            <TaxRate>7.00</TaxRate>
+          </TaxDetails>
+        </Tax>
+        <AmountDetails>
+          <Moa amountTypeCode="I-178" currencyCodeList="ISO_4217">
+            <Amount currencyIdentifier="TND">63.000</Amount>
+          </Moa>
+        </AmountDetails>
+      </InvoiceTaxDetails>
+    </InvoiceTax>
+  </InvoiceBody>
+  <ds:Signature>
+    <ds:SignedInfo/>
+    <ds:SignatureValue/>
+    <ds:KeyInfo/>
+  </ds:Signature>
+</TEIF>

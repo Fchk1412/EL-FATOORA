@@ -1,28 +1,151 @@
-<html>
-  <head>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture</title>
     <style>
-      body {
-        width: 210mm;
-        height: 297mm;
-        margin: 0;
-        background: url('{{templatePath}}') no-repeat center;
-        background-size: cover;
-        font-family: Arial, sans-serif;
-        position: relative;
-      }
-      .field { position: absolute; font-size: 14px; }
-      .invoice-number { top: 80px; left: 150px; }
-      .issue-date { top: 80px; left: 300px; }
-      .client-name { top: 200px; left: 150px; }
-      .client-tva { top: 220px; left: 150px; }
-      .total { bottom: 100px; right: 150px; font-weight: bold; }
+        body {
+            font-family: Arial, sans-serif;
+            direction: ltr;
+            margin: 40px;
+        }
+        .header, .footer, .section {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .bilingual {
+            display: flex;
+            justify-content: space-between;
+        }
+        .invoice-table, .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .invoice-table th, .invoice-table td,
+        .totals-table th, .totals-table td {
+            border: 1px solid #aaa;
+            padding: 8px;
+            text-align: center;
+        }
+        .right {
+            text-align: right;
+        }
+        .bold {
+            font-weight: bold;
+        }
     </style>
-  </head>
-  <body>
-    <div class="field invoice-number">{{invoiceNumber}}</div>
-    <div class="field issue-date">{{issueDate}}</div>
-    <div class="field client-name">{{clientName}}</div>
-    <div class="field client-tva">{{clientTVA}}</div>
-    <div class="field total">{{total}} DT</div>
-  </body>
+</head>
+<body>
+
+    <div class="header">
+        <div class="bilingual">
+            <div>
+                <p><strong>Adresse :</strong> Rue du Lac Malaren, Lotissement El Khalij Les Berges du Lac, 1053-Tunis, Tunisie</p>
+                <p><strong>Téléphone :</strong> 71 86 17 12</p>
+                <p><strong>Télécopie :</strong> 71 86 11 41</p>
+                <p><strong>Site Web :</strong> www.tradenet.com.tn</p>
+            </div>
+            <div style="text-align: right;">
+                <p><strong>العنوان</strong></p>
+                <p><strong>رقم الهاتف</strong></p>
+                <p><strong>رقم الفاكس</strong></p>
+                <p><strong>موقع الواب</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <p><strong>Facture N° :</strong> 50</p>
+        <p><strong>Période :</strong> du 02/01/2015 au 28/02/2015</p>
+        <p><strong>Date :</strong> 03/04/2015</p>
+        <p><strong>Code Client :</strong> 41100013</p>
+        <p><strong>Matricule Fiscal :</strong> 0513287HPM000</p>
+        <p><strong>Référence Unique :</strong> 88812500089016077795819135</p>
+        <p><strong>Copie de la facture électronique enregistrée chez TTN sous la référence :</strong> 88812500089016077795819135</p>
+    </div>
+
+    <div class="section">
+        <h3>Client</h3>
+        <p><strong>Nom :</strong> Office National des Postes (ONP)</p>
+        <p><strong>Adresse :</strong> Centre Informatique Complexe Hached, 1049 TUNIS</p>
+        <p><strong>Profil :</strong> Banques</p>
+        <p><strong>Mode de connexion :</strong> SMTP</p>
+        <p><strong>Nom Compte :</strong> ONPS</p>
+    </div>
+
+    <div class="section">
+        <h3>Détails de la Facture</h3>
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Désignation</th>
+                    <th>Quantité</th>
+                    <th>T.V.A. %</th>
+                    <th>P.U.H.T.</th>
+                    <th>T.V.A</th>
+                    <th>Total H.T.V.A.</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>SMTP</td>
+                    <td>SMTP principal</td>
+                    <td>1.0</td>
+                    <td>12</td>
+                    <td>50.000</td>
+                    <td>6.000</td>
+                    <td>50.000</td>
+                </tr>
+                <tr>
+                    <td>TCEAP</td>
+                    <td>Dossier TCEAP</td>
+                    <td>2.0</td>
+                    <td>12</td>
+                    <td>4.500</td>
+                    <td>1.080</td>
+                    <td>9.000</td>
+                </tr>
+                <tr>
+                    <td>FDE</td>
+                    <td>Dossier FDE</td>
+                    <td>17.0</td>
+                    <td>12</td>
+                    <td>4.500</td>
+                    <td>9.180</td>
+                    <td>76.500</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>Montants</h3>
+        <table class="totals-table">
+            <tr>
+                <th class="right">Total H.T.V.A.</th>
+                <td>135.500</td>
+            </tr>
+            <tr>
+                <th class="right">Montant TVA</th>
+                <td>16.260</td>
+            </tr>
+            <tr>
+                <th class="right">Droit de Timbre</th>
+                <td>0.500</td>
+            </tr>
+            <tr>
+                <th class="right bold">Montant T.T.C</th>
+                <td class="bold">152.260</td>
+            </tr>
+        </table>
+        <p><strong>Montant en lettres :</strong> CENT CINQUANTE DEUX DINARS ET DEUX CENT SOIXANTE MILLIMES</p>
+    </div>
+
+    <div class="footer">
+        <p><strong>A Régler exclusivement au niveau des bureaux postaux sur présentation de la facture.</strong></p>
+    </div>
+
+</body>
 </html>

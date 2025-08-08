@@ -6,12 +6,20 @@ export default function Home() {
       {/* Navbar */}
       <nav className="flex justify-between items-center px-10 py-5 bg-white shadow">
         <h1 className="text-2xl font-bold text-blue-700">EL-FATOORA</h1>
-        <Link
-          to="/Products"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
-        >
-          Subscribe
-        </Link>
+        <div className="flex space-x-4">
+          <Link
+            to="/Login"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+          >
+            Login
+          </Link>
+          <Link
+            to="/subscribe"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+          >
+            Subscribe
+          </Link>
+        </div>
       </nav>
 
       {/* Hero Section */}
